@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Grupo {
+  id            Int          @id @default(autoincrement())
+  nombre        String       @unique
+  selecciones   Seleccion[]
+}
+
+model Seleccion {
+  id                    Int               @id @default(autoincrement())
+  nombre                String            @unique
+  codigoFifa            String            @unique
+  bandera               String
+  entrenador            String
+  rankingFifa           Int
+  grupoId               Int
+  grupo                 Grupo             @relation(fields: [grupoId], references: [id])
+
+  partidosJugados       Int               @default(0)
+  victorias             Int               @default(0)
+  empates               Int               @default(0)
+  derrotas              Int               @default(0)
+
+  golesFavor            Int               @default(0)
+  golesContra           Int               @default(0)
+  diferenciaGoles       Int               @default(0)
+  puntos                Int               @default(0)
+
+  posesionPromedio      Float             @default(0)
+  tirosPromedio         Float             @default(0)
+  precisionPases        Float             @default(0)
+  expectedGoals         Float             @default(0)
+
+  jugadores             Jugador[]
+
+  partidosLocal         Partido[]         @relation("EquipoLocal")
+  partidosVisitante     Partido[]         @relation("EquipoVisitante")
+
+  enfrentamientosA      Enfrentamiento[]  @relation("SeleccionA")
+  enfrentamientosB      Enfrentamiento[]  @relation("SeleccionB")
+
+  prediccionesFavoritas Prediccion[]
+}
+
+model Jugador {
+  id                  Int          @id @default(autoincrement())
+  nombre              String
+  edad                Int
+  posicion            String
+  club                String
+  dorsal              Int
+
+  goles               Int          @default(0)
+  asistencias         Int          @default(0)
+  minutosJugados      Int          @default(0)
+
+  precisionPases      Float        @default(0)
+  tiros               Int          @default(0)
+
+  seleccionId         Int
+  seleccion           Seleccion    @relation(fields: [seleccionId], references: [id])
+}
+
+model Partido {
+  id                    Int           @id @default(autoincrement())
+
+  equipoLocalId         Int
+  equipoVisitanteId     Int
+
+  equipoLocal           Seleccion     @relation("EquipoLocal", fields: [equipoLocalId], references: [id])
+  equipoVisitante       Seleccion     @relation("EquipoVisitante", fields: [equipoVisitanteId], references: [id])
+
+  golesLocal            Int
+  golesVisitante        Int
+
+  posesionLocal         Float
+  posesionVisitante     Float
+
+  tirosLocal            Int
+  tirosVisitante        Int
+
+  expectedGoalsLocal    Float
+  expectedGoalsVisitante Float
+
+  fecha                 DateTime
+  estadio               String
+
+  eventos               EventoPartido[]
+}
+
+model EventoPartido {
+  id              Int       @id @default(autoincrement())
+
+  minuto          Int
+  tipo            String
+
+  jugador         String
+  seleccion       String
+
+  partidoId       Int
+  partido         Partido   @relation(fields: [partidoId], references: [id])
+}
+
+model Enfrentamiento {
+  id                    Int           @id @default(autoincrement())
+
+  seleccionAId          Int
+  seleccionBId          Int
+
+  seleccionA            Seleccion     @relation("SeleccionA", fields: [seleccionAId], references: [id])
+  seleccionB            Seleccion     @relation("SeleccionB", fields: [seleccionBId], references: [id])
+
+  partidosJugados       Int           @default(0)
+
+  victoriasSeleccionA   Int           @default(0)
+  victoriasSeleccionB   Int           @default(0)
+
+  empates               Int           @default(0)
+
+  golesSeleccionA       Int           @default(0)
+  golesSeleccionB       Int           @default(0)
+}
+
+model Prediccion {
+  id                    Int           @id @default(autoincrement())
+
+  seleccionFavoritaId   Int
+  seleccionFavorita     Seleccion     @relation(fields: [seleccionFavoritaId], references: [id])
+
+  probabilidadVictoria  Float
+  probabilidadEmpate    Float
+  probabilidadDerrota   Float
+
+  expectedGoals         Float
+
+  createdAt             DateTime      @default(now())
+}
